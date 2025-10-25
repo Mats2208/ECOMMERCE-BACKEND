@@ -1,26 +1,17 @@
-# Build folders
-/bin/
-/obj/
+# Build folders (en cualquier nivel)
+**/bin/
+**/obj/
+**/TestResults/
 
-# User-specific files
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
-
-# Rider / JetBrains
+# IDE
+.vs/
 .idea/
 *.sln.iml
 
-# Visual Studio
-.vs/
-
-# Logs
+# Logs y temporales
 *.log
 logs/
 Logs/
-
-# Temporary files
 [Tt]emp/
 *.tmp
 *.temp
@@ -33,34 +24,29 @@ Logs/
 *.nuget.targets
 packages/
 
-# Environment / config
+# Config locales
 appsettings.Development.json
 appsettings.Local.json
 .env
 
-# Publish output
+# Publicación
 /out/
 /publish/
 /dist/
 
-# OS-specific
+# OS
 .DS_Store
 Thumbs.db
 
-# Backup files
+# Backups
 *.bak
 *.old
 
-# Resharper
+# ReSharper
 _ReSharper*/
-/*_ReSharper*/
-/*.DotSettings.user
+*/_ReSharper*/
+*.DotSettings.user
 
-# Coverage reports
-*.coverage
-*.coveragexml
-TestResults/
-
-# Generated files
+# Generados
 wwwroot/lib/
 node_modules/
