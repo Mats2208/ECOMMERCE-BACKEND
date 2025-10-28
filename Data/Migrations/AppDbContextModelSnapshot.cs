@@ -4,19 +4,16 @@ using EcommerceA.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace EcommerceA.Migrations
+namespace EcommerceA.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251024221925_Initial")]
-    partial class Initial
+    partial class AppDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,6 +42,26 @@ namespace EcommerceA.Migrations
                     b.HasIndex("ClientUserId", "Status");
 
                     b.ToTable("Carts");
+                });
+
+            modelBuilder.Entity("EcommerceA.Models.Favorite", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId", "ProductId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Favorites", (string)null);
                 });
 
             modelBuilder.Entity("EcommerceA.Models.Product", b =>
@@ -175,6 +192,25 @@ namespace EcommerceA.Migrations
                     b.Navigation("ClientUser");
 
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("EcommerceA.Models.Favorite", b =>
+                {
+                    b.HasOne("EcommerceA.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EcommerceA.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("EcommerceA.Models.Product", b =>

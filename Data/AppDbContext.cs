@@ -8,6 +8,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<User> Users => Set<User>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Cart> Carts => Set<Cart>();
+    public DbSet<Favorite> Favorites => Set<Favorite>();
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -60,5 +62,63 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 a.Property(i => i.Quantity).IsRequired();
             });
         });
+        
+        // FAVORITES
+        modelBuilder.Entity<Favorite>(b =>
+        {
+            b.ToTable("Favorites");
+            b.HasKey(f => new { f.UserId, f.ProductId });        // PK compuesta
+            b.HasIndex(f => f.ProductId);                        // para conteos por producto
+            b.HasIndex(f => f.UserId);                           // para listados por usuario
+
+            b.HasOne(f => f.User)
+                .WithMany()
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            b.HasOne(f => f.Product)
+                .WithMany()
+                .HasForeignKey(f => f.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
+    
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        // Detecta usuarios cuyo CSV cambió
+        var changedUsers = ChangeTracker.Entries<User>()
+            .Where(e => e.State == EntityState.Modified &&
+                        e.Property(u => u.FavoriteProductIdsCsv).IsModified)
+            .ToList();
+
+        foreach (var entry in changedUsers)
+        {
+            var beforeCsv = entry.Property(u => u.FavoriteProductIdsCsv).OriginalValue ?? string.Empty;
+            var afterCsv  = entry.Property(u => u.FavoriteProductIdsCsv).CurrentValue  ?? string.Empty;
+
+            static HashSet<Guid> Parse(string csv) =>
+                csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select(s => Guid.TryParse(s, out var id) ? id : Guid.Empty)
+                    .Where(id => id != Guid.Empty)
+                    .ToHashSet();
+
+            var before = Parse(beforeCsv);
+            var after  = Parse(afterCsv);
+
+            // Nuevos favoritos -> INSERT
+            var added = after.Except(before);
+            foreach (var productId in added)
+                Favorites.Add(new Favorite { UserId = entry.Entity.Id, ProductId = productId });
+
+            // Quitados -> DELETE
+            var removed = before.Except(after);
+            foreach (var productId in removed)
+                Favorites.Remove(new Favorite { UserId = entry.Entity.Id, ProductId = productId });
+        }
+
+        return await base.SaveChangesAsync(cancellationToken);
+    }
+
 }
+
+
